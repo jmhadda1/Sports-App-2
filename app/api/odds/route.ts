@@ -2,8 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 
 type League = "nba" | "nfl";
 
-const ODDS_API_KEY = process.env.ODDS_API_KEY;
-const ODDS_BASE = "https://api.the-odds-api.com/v4";
+const ODDS_API_KEY =
+  process.env.ODDS_API_KEY || process.env.THE_ODDS_API_KEY || "";
+const ODDS_BASE =
+  process.env.ODDS_API_BASE || process.env.THE_ODDS_API_BASE || "https://api.the-odds-api.com/v4";
 
 function getSportKey(league: League) {
   return league === "nba" ? "basketball_nba" : "americanfootball_nfl";

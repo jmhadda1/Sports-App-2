@@ -35,6 +35,8 @@ const nbaFallbackPlayers: PlayerSearchResult[] = [
   { id: "202681", name: "Kyrie Irving", team: "DAL", league: "nba" },
   { id: "203954", name: "Joel Embiid", team: "PHI", league: "nba" },
   { id: "1628983", name: "Shai Gilgeous-Alexander", team: "OKC", league: "nba" },
+  { id: "1627759", name: "Nikola Jokic", team: "DEN", league: "nba" },
+  { id: "203999", name: "Nikola Vucevic", team: "CHI", league: "nba" },
 ];
 
 const nflFallbackPlayers: PlayerSearchResult[] = [
@@ -46,6 +48,8 @@ const nflFallbackPlayers: PlayerSearchResult[] = [
   { id: "4240564", name: "Dak Prescott", team: "DAL", league: "nfl" },
   { id: "4230540", name: "Justin Herbert", team: "LAC", league: "nfl" },
   { id: "4259547", name: "Tua Tagovailoa", team: "MIA", league: "nfl" },
+  { id: "16722", name: "Tyreek Hill", team: "MIA", league: "nfl" },
+  { id: "4047646", name: "Christian McCaffrey", team: "SF", league: "nfl" },
 ];
 
 async function fetchJson(url: string, init?: RequestInit) {
@@ -99,7 +103,12 @@ async function searchNBAPlayers(q: string): Promise<PlayerSearchResult[]> {
         team: String(row[teamIdx] || ""),
         league: "nba" as League,
       }))
-      .filter((p) => p.name.toLowerCase().includes(query) || p.id.includes(query) || p.team?.toLowerCase().includes(query))
+      .filter(
+        (p) =>
+          p.name.toLowerCase().includes(query) ||
+          p.id.includes(query) ||
+          p.team?.toLowerCase().includes(query)
+      )
       .slice(0, 15);
   } catch {
     return [];
@@ -141,30 +150,26 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "league must be nba or nfl" }, { status: 400 });
     }
 
-    if (q.length < 2) {
-      return NextResponse.json({ league, query: q, results: [], generatedAt: new Date().toISOString() });
+    if (q.length < 1) {
+      return NextResponse.json({
+        league,
+        query: q,
+        results: league === "nba" ? nbaFallbackPlayers : nflFallbackPlayers,
+        generatedAt: new Date().toISOString(),
+      });
     }
 
     const liveResults =
       league === "nba" ? await searchNBAPlayers(q) : await searchNFLPlayers(q);
 
     const fallbackResults = filterFallbackPlayers(league, q);
-
-// merge both
-const combined = [...liveResults, ...fallbackResults];
-
-// remove duplicates by id
-const unique = Array.from(
-  new Map(combined.map((p) => [p.id, p])).values()
-);
-
-// limit results
-const results = unique.slice(0, 15);
+    const combined = [...liveResults, ...fallbackResults];
+    const unique = Array.from(new Map(combined.map((p) => [p.id, p])).values());
 
     return NextResponse.json({
       league,
       query: q,
-      results,
+      results: unique.slice(0, 15),
       generatedAt: new Date().toISOString(),
     });
   } catch (error: any) {
