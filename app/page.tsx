@@ -481,7 +481,7 @@ export default function Page() {
   // Search players
   useEffect(() => {
     const q = playerQuery.trim();
-    if (q.length < 2) {
+    if (q.length < 1) {
       setPlayerResults([]);
       return;
     }

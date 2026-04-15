@@ -148,8 +148,18 @@ export async function GET(req: NextRequest) {
     const liveResults =
       league === "nba" ? await searchNBAPlayers(q) : await searchNFLPlayers(q);
 
-    const results =
-      liveResults.length > 0 ? liveResults : filterFallbackPlayers(league, q);
+    const fallbackResults = filterFallbackPlayers(league, q);
+
+// merge both
+const combined = [...liveResults, ...fallbackResults];
+
+// remove duplicates by id
+const unique = Array.from(
+  new Map(combined.map((p) => [p.id, p])).values()
+);
+
+// limit results
+const results = unique.slice(0, 15);
 
     return NextResponse.json({
       league,
