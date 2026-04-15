@@ -201,8 +201,8 @@ const playerMeta = {
 } as const;
 
 function getFallbackLogs(league: League, player: string) {
-  const leagueLogs = fallbackPlayerLogs[league] as Record<string, any[]>;
-  return leagueLogs[player] || [];
+  const leagueLogs = fallbackPlayerLogs[league] as Record<string, readonly any[]>;
+  return [...(leagueLogs[player] ?? [])];
 }
 
 function avg(nums: number[]) {
